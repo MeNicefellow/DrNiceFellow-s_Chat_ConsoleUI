@@ -1,0 +1,3 @@
+openai_api_key: abefsdasadfsda
+user_name: Dr. Nicefellow
+host: http://0.0.0.0:5000/v1/completions
