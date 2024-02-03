@@ -5,6 +5,7 @@ import os
 init()
 import random
 import yaml
+import json
 
 # Load keys from config.yml
 with open("config.yml", 'r') as ymlfile:
@@ -40,7 +41,7 @@ while True:
         "max_tokens": max_tokens,
         "n_predict": max_tokens,
         "min_p": min_p,
-        "stream": False,
+        "stream": True,
         "seed": random.randint(
             1000002406736107, 3778562406736107
         ),  # Was acting weird without this
@@ -59,14 +60,28 @@ while True:
         },
         json=payload,
         timeout=360,
-        stream=False,
+        stream=True,  # Enable streaming
     )
+
+    if response.encoding is None:
+        response.encoding = "utf-8"
     if response.status_code == 200:
-        answer = response.json()['choices'][0]['text']
-        print(Fore.CYAN + "Bot:", answer + Fore.RESET)
-        chat_history += f"{inst_beg}{user_input}{inst_end}{answer}"
+        print(Fore.CYAN + "Bot:", end=' ')
+        com_answer = ''
+        for line in response.iter_lines(decode_unicode=True):
+            if " ".join(line.split(" ")[1:]) != "[DONE]":
+                try:
+                    answer = json.loads(" ".join(line.split(" ")[1:]))["choices"][0][
+                    "text"
+                    ]
+                    print(answer, end='')
+                    com_answer+= answer
+                except:
+                    continue
+        chat_history += f"{inst_beg}{user_input}{inst_end}{com_answer}"
+        print(Fore.RESET)
     else:
         print("Error:", response.status_code)
-    print(Style.BRIGHT + Fore.YELLOW + Back.BLUE + "=" * 50 + Fore.RESET + Back.RESET + Style.RESET_ALL)
 
+    print(Style.BRIGHT + Fore.YELLOW + Back.BLUE + "=" * 50 + Fore.RESET + Back.RESET + Style.RESET_ALL)
 
